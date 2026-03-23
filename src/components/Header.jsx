@@ -1,9 +1,10 @@
+import logo from "../assets/logo.jpeg"
 const Header = () => {
   return (
     <div className="w-full bg-black text-white p-6 flex flex-col items-center shadow-2xl rounded-b-[40px] mb-6">
       <div className="w-30 h-30 bg-white rounded-full flex items-center justify-center mb-3 overflow-hidden border-4 border-[#e6007e] shadow-xl">
         <img
-          src="../../public/logo.jpeg"
+          src={logo}
           alt="2B Stylish"
           className="w-full h-full object-contain "
         />
