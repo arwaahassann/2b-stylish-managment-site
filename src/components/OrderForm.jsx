@@ -10,7 +10,6 @@ const OrderForm = ({ onAddOrder }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const file = fileInputRef.current?.files[0];
 
     const submitOrder = (finalImage) => {
@@ -23,13 +22,11 @@ const OrderForm = ({ onAddOrder }) => {
         time: new Date().toLocaleString("ar-EG"),
         status: "pending",
       });
-
       setPhone("");
       setPrice("");
       setDetails("");
       setFileSelected(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-
       alert("✅ تم تسجيل الطلب بنجاح!");
     };
 
@@ -78,7 +75,10 @@ const OrderForm = ({ onAddOrder }) => {
           type="file"
           accept="image/*"
           ref={fileInputRef}
-          onChange={() => setFileSelected(true)}
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) setFileSelected(true);
+          }}
           className="hidden"
         />
         <div className="flex flex-col items-center gap-2">
