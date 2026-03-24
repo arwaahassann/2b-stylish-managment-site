@@ -8,19 +8,22 @@ function App() {
     try {
       const saved = localStorage.getItem("sb_orders");
       return saved ? JSON.parse(saved) : [];
-    } catch (_e) {
+    } catch (e) {
+      console.error("Storage error:", e);
       return [];
     }
   });
 
   useEffect(() => {
     try {
-      const ordersWithoutImages = orders.map(
-        ({ image: _image, ...rest }) => rest,
-      );
+      const ordersWithoutImages = orders.map((order) => {
+        const newOrder = { ...order };
+        delete newOrder.image;
+        return newOrder;
+      });
       localStorage.setItem("sb_orders", JSON.stringify(ordersWithoutImages));
-    } catch (_e) {
-      // localStorage امتلأ
+    } catch (e) {
+      console.error("Save error:", e);
     }
   }, [orders]);
 
