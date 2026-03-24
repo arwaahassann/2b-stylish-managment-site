@@ -11,7 +11,7 @@ const OrderForm = ({ onAddOrder }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // الطريقة دي هي الأسرع والأخف على الموبايل وسفاري
+      // استخدام URL مؤقت للملف مباشرة - أخف طريقة لمنع الـ Crash في سفاري والموبايل
       const imageUrl = URL.createObjectURL(file);
       setFormData((prev) => ({ ...prev, image: imageUrl }));
     }
@@ -34,13 +34,13 @@ const OrderForm = ({ onAddOrder }) => {
       phone: formData.phone || "بدون رقم",
       price: formData.price || "0",
       details: formData.details || "بدون تفاصيل",
-      image: formData.image, // هيرسل اللينك المؤقت للـ List
+      image: formData.image,
       id: Date.now(),
       time: formattedTime,
       status: "pending",
     });
 
-    // مسح البيانات بعد الإرسال
+    // مسح البيانات بعد الإرسال بنجاح
     setFormData({ phone: "", price: "", details: "", image: null });
     alert("✅ تم تسجيل الطلب بنجاح!");
   };
@@ -56,7 +56,7 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.phone}
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
         placeholder="رقم الهاتف (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
 
       <input
@@ -65,7 +65,7 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.price}
         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
         placeholder="السعر (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
 
       <textarea
@@ -73,10 +73,10 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
         placeholder="تفاصيل إضافية (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
 
-      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
+      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 hover:border-[#e6007e]/30 transition-all">
         <input
           type="file"
           accept="image/*"
@@ -99,7 +99,7 @@ const OrderForm = ({ onAddOrder }) => {
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-pink-100"
       >
         تسجيل الطلب
       </button>
