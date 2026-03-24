@@ -11,45 +11,16 @@ const OrderForm = ({ onAddOrder }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          // --- خلاصة الحل: ضغط وتصغير أقصى ---
-          const canvas = document.createElement("canvas");
-          const MAX_SIZE = 400; // تصغير العرض لـ 400 بكسل فقط (خفيف جداً)
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // تحويل لجودة منخفضة جداً (0.1) لضمان عدم حدوث Crash
-          const lowResImage = canvas.toDataURL("image/jpeg", 0.1);
-          setFormData((prev) => ({ ...prev, image: lowResImage }));
-        };
-      };
+      // الطريقة دي بتعمل "لينك وهمي" للملف فوراً بدون استهلاك رامات الموبايل
+      const imageUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, image: imageUrl }));
     }
   };
 
   const handleSubmit = (e) => {
+    // أهم سطر: بيمنع الصفحة إنها تعمل ريفريش أو تخرج برا
     e.preventDefault();
+
     const now = new Date();
     const formattedTime =
       now.toLocaleDateString("ar-EG", { day: "numeric", month: "long" }) +
@@ -60,17 +31,20 @@ const OrderForm = ({ onAddOrder }) => {
         hour12: true,
       });
 
+    // إرسال البيانات للـ List فوراً
     onAddOrder({
-      ...formData,
+      phone: formData.phone || "بدون رقم",
+      price: formData.price || "0",
+      details: formData.details || "بدون تفاصيل",
+      image: formData.image, // هيرسل اللينك الخفيف للـ List
       id: Date.now(),
       time: formattedTime,
       status: "pending",
-      phone: formData.phone || "بدون رقم",
-      price: formData.price || "0",
     });
 
+    // مسح الفورم عشان العميل يسجل غيره، بس بنفضل في نفس الصفحة
     setFormData({ phone: "", price: "", details: "", image: null });
-    alert("✅ مبروك! الطلب اتسجل");
+    alert("✅ تم تسجيل الطلب بنجاح!");
   };
 
   return (
@@ -83,23 +57,25 @@ const OrderForm = ({ onAddOrder }) => {
         name="phone"
         value={formData.phone}
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-        placeholder="رقم الهاتف"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        placeholder="رقم الهاتف (اختياري)"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
+
       <input
         type="number"
         name="price"
         value={formData.price}
         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-        placeholder="السعر"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        placeholder="السعر (اختياري)"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
+
       <textarea
         name="details"
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-        placeholder="التفاصيل"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
+        placeholder="تفاصيل إضافية (اختياري)"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none focus:ring-2 focus:ring-[#e6007e]/10"
       />
 
       <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 hover:border-[#e6007e]/30 transition-all">
@@ -118,14 +94,14 @@ const OrderForm = ({ onAddOrder }) => {
         ) : (
           <div className="text-center">
             <span className="text-2xl">📸</span>
-            <p className="text-[10px] font-bold">ارفع صورة (أي مساحة)</p>
+            <p className="text-[10px] font-bold">ارفع صورة المنتج</p>
           </div>
         )}
       </label>
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-pink-100"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-pink-100 hover:bg-[#d10074]"
       >
         تسجيل الطلب
       </button>
