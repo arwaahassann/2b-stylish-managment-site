@@ -42,7 +42,11 @@ const OrderCard = ({ order, onDelete, onUpdateStatus }) => {
         >
           <div className="w-24 h-28 bg-white rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center">
             {order.image ? (
-              <img src={order.image} className="w-full h-full object-cover" />
+              <img
+                src={order.image}
+                alt="Order"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <span className="opacity-20 text-3xl">🛍️</span>
             )}
@@ -97,15 +101,22 @@ const OrderCard = ({ order, onDelete, onUpdateStatus }) => {
         </div>
       </div>
 
-      {/* مودال الشاشة الكاملة */}
-      {isZoomed && (
+      {/* مودال الشاشة الكاملة (LightBox) */}
+      {isZoomed && order.image && (
         <div
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300"
           onClick={() => setIsZoomed(false)}
         >
+          {/* زر إغلاق إضافي للراحة */}
+          <button className="absolute top-10 right-10 text-white text-3xl font-light">
+            &times;
+          </button>
+
           <img
             src={order.image}
-            className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl animate-in zoom-in-95"
+            alt="Zoomed"
+            className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-2 border-white/10 transition-transform duration-300 scale-100"
+            onClick={(e) => e.stopPropagation()} // منع الإغلاق عند الضغط على الصورة
           />
         </div>
       )}
