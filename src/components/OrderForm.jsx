@@ -1,4 +1,5 @@
 import { useState } from "react";
+import imageCompression from "browser-image-compression";
 
 const OrderForm = ({ onAddOrder }) => {
   const [formData, setFormData] = useState({
@@ -8,38 +9,29 @@ const OrderForm = ({ onAddOrder }) => {
     image: null,
   });
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-
-          // --- إجبار تصغير الأبعاد ---
-          const MAX_WIDTH = 800; // أقصى عرض 800 بكسل (كافي جداً وواضح)
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // --- تقليل الجودة لـ 50% وتحويلها لـ Base64 خفيف ---
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
-          setFormData((prev) => ({ ...prev, image: compressedBase64 }));
+      try {
+        // إعدادات الضغط (عنيفة جداً عشان نضمن الشغل)
+        const options = {
+          maxSizeMB: 0.1, // الحجم الأقصى 100 كيلوبايت بس!
+          maxWidthOrHeight: 800, // أقصى طول أو عرض 800 بكسل
+          useWebWorker: true, // تشغيل الضغط في الخلفية عشان الموبايل ميهنجش
+          fileType: "image/jpeg",
         };
-      };
-      reader.readAsDataURL(file);
+
+        const compressedFile = await imageCompression(file, options);
+
+        // تحويل الملف المضغوط جداً لـ Base64 خفيف
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedFile);
+        reader.onloadend = () => {
+          setFormData((prev) => ({ ...prev, image: reader.result }));
+        };
+      } catch (error) {
+        console.error("Compression Error:", error);
+      }
     }
   };
 
@@ -78,8 +70,8 @@ const OrderForm = ({ onAddOrder }) => {
         name="phone"
         value={formData.phone}
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-        placeholder="رقم الهاتف (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
+        placeholder="رقم الهاتف"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
 
       <input
@@ -87,15 +79,15 @@ const OrderForm = ({ onAddOrder }) => {
         name="price"
         value={formData.price}
         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-        placeholder="السعر (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/10"
+        placeholder="السعر"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
 
       <textarea
         name="details"
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-        placeholder="تفاصيل إضافية (اختياري)"
+        placeholder="تفاصيل إضافية"
         className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
       />
 
