@@ -5,12 +5,23 @@ import OrderCard from "./components/OrderCard";
 
 function App() {
   const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem("sb_orders");
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem("sb_orders");
+      return saved ? JSON.parse(saved) : [];
+    } catch (_e) {
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem("sb_orders", JSON.stringify(orders));
+    try {
+      const ordersWithoutImages = orders.map(
+        ({ image: _image, ...rest }) => rest,
+      );
+      localStorage.setItem("sb_orders", JSON.stringify(ordersWithoutImages));
+    } catch (_e) {
+      // localStorage امتلأ
+    }
   }, [orders]);
 
   const addOrder = (newOrder) => setOrders([newOrder, ...orders]);
@@ -25,7 +36,6 @@ function App() {
     setOrders(
       orders.map((o) => {
         if (o.id === id) {
-          // Toggle Logic: لو نفس الحالة يرجع لـ pending
           return {
             ...o,
             status: o.status === newStatus ? "pending" : newStatus,
@@ -36,9 +46,8 @@ function App() {
     );
   };
 
-  // إحصائية سريعة
   const totalCash = orders
-    .filter((o) => o.status === "completed") // بنحسب بس اللي اتسوى
+    .filter((o) => o.status === "completed")
     .reduce((acc, curr) => acc + Number(curr.price || 0), 0);
 
   return (
