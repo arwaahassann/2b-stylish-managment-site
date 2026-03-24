@@ -16,9 +16,9 @@ const OrderForm = ({ onAddOrder }) => {
         const img = new Image();
         img.src = event.target.result;
         img.onload = () => {
-          // --- عملية تصغير الصورة ---
+          // --- عملية ضغط وتصغير الصورة لضمان الاستقرار على الموبايل وسفاري ---
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 600; // هنصغر عرض الصورة لـ 600 بكسل بس عشان تكون خفيفة
+          const MAX_WIDTH = 500; // عرض مناسب جداً للموبايل وخفيف
           const scaleSize = MAX_WIDTH / img.width;
           canvas.width = MAX_WIDTH;
           canvas.height = img.height * scaleSize;
@@ -26,9 +26,17 @@ const OrderForm = ({ onAddOrder }) => {
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          // تحويل الصورة لـ String مضغوط جداً
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.6); // جودة 60% كافية جداً
-          setFormData((prev) => ({ ...prev, image: compressedDataUrl }));
+          // تحويل الصورة لـ Blob (أخف بكتير من Base64)
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                setFormData((prev) => ({ ...prev, image: url }));
+              }
+            },
+            "image/jpeg",
+            0.5,
+          ); // جودة 50% لضمان عدم حدوث Crash
         };
       };
       reader.readAsDataURL(file);
@@ -36,6 +44,7 @@ const OrderForm = ({ onAddOrder }) => {
   };
 
   const handleSubmit = (e) => {
+    // منع الريفريش نهائياً
     e.preventDefault();
 
     const now = new Date();
@@ -48,7 +57,7 @@ const OrderForm = ({ onAddOrder }) => {
         hour12: true,
       });
 
-    // إرسال البيانات (حتى لو فاضية)
+    // إرسال البيانات (كل الحقول Optional كما طلبتِ)
     onAddOrder({
       phone: formData.phone || "بدون رقم",
       price: formData.price || "0",
@@ -59,7 +68,7 @@ const OrderForm = ({ onAddOrder }) => {
       status: "pending",
     });
 
-    // مسح الفورم
+    // مسح الفورم والبقاء في نفس الصفحة
     setFormData({ phone: "", price: "", details: "", image: null });
     alert("✅ تم إضافة الطلب بنجاح!");
   };
@@ -106,7 +115,7 @@ const OrderForm = ({ onAddOrder }) => {
           <img
             src={formData.image}
             alt="Preview"
-            className="w-16 h-16 object-cover rounded-xl"
+            className="w-16 h-16 object-cover rounded-xl border border-[#e6007e]/20"
           />
         ) : (
           <div className="text-center">
@@ -118,7 +127,7 @@ const OrderForm = ({ onAddOrder }) => {
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-pink-100 active:scale-95 transition-all hover:bg-[#d10074]"
       >
         تسجيل الطلب
       </button>
