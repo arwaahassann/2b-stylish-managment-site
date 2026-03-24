@@ -11,40 +11,13 @@ const OrderForm = ({ onAddOrder }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          // --- عملية ضغط وتصغير الصورة لضمان الاستقرار على الموبايل وسفاري ---
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 500; // عرض مناسب جداً للموبايل وخفيف
-          const scaleSize = MAX_WIDTH / img.width;
-          canvas.width = MAX_WIDTH;
-          canvas.height = img.height * scaleSize;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-          // تحويل الصورة لـ Blob (أخف بكتير من Base64)
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                setFormData((prev) => ({ ...prev, image: url }));
-              }
-            },
-            "image/jpeg",
-            0.5,
-          ); // جودة 50% لضمان عدم حدوث Crash
-        };
-      };
-      reader.readAsDataURL(file);
+      // الطريقة دي هي الأسرع والأخف على الموبايل وسفاري
+      const imageUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, image: imageUrl }));
     }
   };
 
   const handleSubmit = (e) => {
-    // منع الريفريش نهائياً
     e.preventDefault();
 
     const now = new Date();
@@ -57,20 +30,19 @@ const OrderForm = ({ onAddOrder }) => {
         hour12: true,
       });
 
-    // إرسال البيانات (كل الحقول Optional كما طلبتِ)
     onAddOrder({
       phone: formData.phone || "بدون رقم",
       price: formData.price || "0",
       details: formData.details || "بدون تفاصيل",
-      image: formData.image,
+      image: formData.image, // هيرسل اللينك المؤقت للـ List
       id: Date.now(),
       time: formattedTime,
       status: "pending",
     });
 
-    // مسح الفورم والبقاء في نفس الصفحة
+    // مسح البيانات بعد الإرسال
     setFormData({ phone: "", price: "", details: "", image: null });
-    alert("✅ تم إضافة الطلب بنجاح!");
+    alert("✅ تم تسجيل الطلب بنجاح!");
   };
 
   return (
@@ -84,7 +56,7 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.phone}
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
         placeholder="رقم الهاتف (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/20"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
 
       <input
@@ -93,7 +65,7 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.price}
         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
         placeholder="السعر (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-2 focus:ring-[#e6007e]/20"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
 
       <textarea
@@ -101,10 +73,10 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
         placeholder="تفاصيل إضافية (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none focus:ring-2 focus:ring-[#e6007e]/20 resize-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
       />
 
-      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 hover:border-[#e6007e] transition-all bg-gray-50/50">
+      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
         <input
           type="file"
           accept="image/*"
@@ -115,7 +87,7 @@ const OrderForm = ({ onAddOrder }) => {
           <img
             src={formData.image}
             alt="Preview"
-            className="w-16 h-16 object-cover rounded-xl border border-[#e6007e]/20"
+            className="w-20 h-20 object-cover rounded-xl border border-pink-100"
           />
         ) : (
           <div className="text-center">
@@ -127,7 +99,7 @@ const OrderForm = ({ onAddOrder }) => {
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-pink-100 active:scale-95 transition-all hover:bg-[#d10074]"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all"
       >
         تسجيل الطلب
       </button>
