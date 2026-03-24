@@ -6,39 +6,40 @@ const OrderForm = ({ onAddOrder }) => {
   const [details, setDetails] = useState("");
   const [fileSelected, setFileSelected] = useState(false);
 
-  // بنستخدم Ref عشان الملف يفضل "راكن" على جنب بعيد عن الـ State والـ Re-renders
   const fileInputRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // بنسحب الملف "لحظة" الضغط على الزرار بس
     const file = fileInputRef.current?.files[0];
-    let finalImage = null;
+
+    const submitOrder = (finalImage) => {
+      onAddOrder({
+        phone: phone || "بدون رقم",
+        price: price || "0",
+        details: details || "بدون تفاصيل",
+        image: finalImage,
+        id: Date.now(),
+        time: new Date().toLocaleString("ar-EG"),
+        status: "pending",
+      });
+
+      setPhone("");
+      setPrice("");
+      setDetails("");
+      setFileSelected(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      alert("✅ تم تسجيل الطلب بنجاح!");
+    };
 
     if (file) {
-      // بنعمل URL مؤقت للملف الأصلي زي ما هو
-      finalImage = URL.createObjectURL(file);
+      const reader = new FileReader();
+      reader.onloadend = () => submitOrder(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      submitOrder(null);
     }
-
-    onAddOrder({
-      phone: phone || "بدون رقم",
-      price: price || "0",
-      details: details || "بدون تفاصيل",
-      image: finalImage,
-      id: Date.now(),
-      time: new Date().toLocaleString("ar-EG"),
-      status: "pending",
-    });
-
-    // تصفير الفورم يدويًا
-    setPhone("");
-    setPrice("");
-    setDetails("");
-    setFileSelected(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-
-    alert("✅ تم تسجيل الطلب بنجاح!");
   };
 
   return (
@@ -51,25 +52,27 @@ const OrderForm = ({ onAddOrder }) => {
         placeholder="رقم الهاتف"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-1 focus:ring-pink-200"
       />
       <input
         type="number"
         placeholder="السعر"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none focus:ring-1 focus:ring-pink-200"
       />
       <textarea
         placeholder="تفاصيل إضافية"
         value={details}
         onChange={(e) => setDetails(e.target.value)}
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none focus:ring-1 focus:ring-pink-200"
       />
-
-      {/* زرار الكاميرا - مبيعملش Preview عشان ميهنجش */}
       <label
-        className={`cursor-pointer border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all ${fileSelected ? "border-green-400 bg-green-50" : "border-gray-200 bg-gray-50"}`}
+        className={`cursor-pointer border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all ${
+          fileSelected
+            ? "border-green-400 bg-green-50"
+            : "border-gray-200 bg-gray-50"
+        }`}
       >
         <input
           type="file"
@@ -85,10 +88,9 @@ const OrderForm = ({ onAddOrder }) => {
           </p>
         </div>
       </label>
-
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 shadow-lg shadow-pink-100"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 shadow-lg shadow-pink-100 transition-all"
       >
         تسجيل الطلب
       </button>
