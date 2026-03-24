@@ -11,15 +11,40 @@ const OrderForm = ({ onAddOrder }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // استخدام URL مؤقت للملف مباشرة - أخف طريقة لمنع الـ Crash في سفاري والموبايل
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, image: imageUrl }));
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+
+          // --- إجبار تصغير الأبعاد ---
+          const MAX_WIDTH = 800; // أقصى عرض 800 بكسل (كافي جداً وواضح)
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // --- تقليل الجودة لـ 50% وتحويلها لـ Base64 خفيف ---
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
+          setFormData((prev) => ({ ...prev, image: compressedBase64 }));
+        };
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const now = new Date();
     const formattedTime =
       now.toLocaleDateString("ar-EG", { day: "numeric", month: "long" }) +
@@ -31,16 +56,14 @@ const OrderForm = ({ onAddOrder }) => {
       });
 
     onAddOrder({
-      phone: formData.phone || "بدون رقم",
-      price: formData.price || "0",
-      details: formData.details || "بدون تفاصيل",
-      image: formData.image,
+      ...formData,
       id: Date.now(),
       time: formattedTime,
       status: "pending",
+      phone: formData.phone || "بدون رقم",
+      price: formData.price || "0",
     });
 
-    // مسح البيانات بعد الإرسال بنجاح
     setFormData({ phone: "", price: "", details: "", image: null });
     alert("✅ تم تسجيل الطلب بنجاح!");
   };
@@ -73,10 +96,10 @@ const OrderForm = ({ onAddOrder }) => {
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
         placeholder="تفاصيل إضافية (اختياري)"
-        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none focus:ring-2 focus:ring-[#e6007e]/10"
+        className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
       />
 
-      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 hover:border-[#e6007e]/30 transition-all">
+      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
         <input
           type="file"
           accept="image/*"
