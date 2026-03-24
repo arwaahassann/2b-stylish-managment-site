@@ -1,5 +1,4 @@
-import { useState } from "react";
-import imageCompression from "browser-image-compression";
+import { useState, useEffect } from "react";
 
 const OrderForm = ({ onAddOrder }) => {
   const [formData, setFormData] = useState({
@@ -9,29 +8,19 @@ const OrderForm = ({ onAddOrder }) => {
     image: null,
   });
 
-  const handleImageChange = async (e) => {
+  // تنظيف الذاكرة أوتوماتيكياً عشان سفاري ميهنجش
+  useEffect(() => {
+    return () => {
+      if (formData.image) URL.revokeObjectURL(formData.image);
+    };
+  }, [formData.image]);
+
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        // إعدادات الضغط (عنيفة جداً عشان نضمن الشغل)
-        const options = {
-          maxSizeMB: 0.1, // الحجم الأقصى 100 كيلوبايت بس!
-          maxWidthOrHeight: 800, // أقصى طول أو عرض 800 بكسل
-          useWebWorker: true, // تشغيل الضغط في الخلفية عشان الموبايل ميهنجش
-          fileType: "image/jpeg",
-        };
-
-        const compressedFile = await imageCompression(file, options);
-
-        // تحويل الملف المضغوط جداً لـ Base64 خفيف
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onloadend = () => {
-          setFormData((prev) => ({ ...prev, image: reader.result }));
-        };
-      } catch (error) {
-        console.error("Compression Error:", error);
-      }
+      // بنعمل لينك مؤقت للملف "بدون قراءته" (ده مبيستهلكش رامات خالص)
+      const imageUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, image: imageUrl }));
     }
   };
 
@@ -56,8 +45,9 @@ const OrderForm = ({ onAddOrder }) => {
       price: formData.price || "0",
     });
 
+    // مهم جداً: بنصفر الفورم من غير ما نقفل الصفحة
     setFormData({ phone: "", price: "", details: "", image: null });
-    alert("✅ تم تسجيل الطلب بنجاح!");
+    alert("✅ تم تسجيل الطلب!");
   };
 
   return (
@@ -73,7 +63,6 @@ const OrderForm = ({ onAddOrder }) => {
         placeholder="رقم الهاتف"
         className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
-
       <input
         type="number"
         name="price"
@@ -82,12 +71,11 @@ const OrderForm = ({ onAddOrder }) => {
         placeholder="السعر"
         className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right outline-none"
       />
-
       <textarea
         name="details"
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-        placeholder="تفاصيل إضافية"
+        placeholder="التفاصيل"
         className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
       />
 
@@ -107,14 +95,14 @@ const OrderForm = ({ onAddOrder }) => {
         ) : (
           <div className="text-center">
             <span className="text-2xl">📸</span>
-            <p className="text-[10px] font-bold">إرفاق صورة</p>
+            <p className="text-[10px] font-bold">تصوير المنتج</p>
           </div>
         )}
       </label>
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-pink-100"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 shadow-lg shadow-pink-100"
       >
         تسجيل الطلب
       </button>
