@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const OrderForm = ({ onAddOrder }) => {
   const [formData, setFormData] = useState({
@@ -8,19 +8,43 @@ const OrderForm = ({ onAddOrder }) => {
     image: null,
   });
 
-  // تنظيف الذاكرة أوتوماتيكياً عشان سفاري ميهنجش
-  useEffect(() => {
-    return () => {
-      if (formData.image) URL.revokeObjectURL(formData.image);
-    };
-  }, [formData.image]);
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // بنعمل لينك مؤقت للملف "بدون قراءته" (ده مبيستهلكش رامات خالص)
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, image: imageUrl }));
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          // --- خلاصة الحل: ضغط وتصغير أقصى ---
+          const canvas = document.createElement("canvas");
+          const MAX_SIZE = 400; // تصغير العرض لـ 400 بكسل فقط (خفيف جداً)
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // تحويل لجودة منخفضة جداً (0.1) لضمان عدم حدوث Crash
+          const lowResImage = canvas.toDataURL("image/jpeg", 0.1);
+          setFormData((prev) => ({ ...prev, image: lowResImage }));
+        };
+      };
     }
   };
 
@@ -45,9 +69,8 @@ const OrderForm = ({ onAddOrder }) => {
       price: formData.price || "0",
     });
 
-    // مهم جداً: بنصفر الفورم من غير ما نقفل الصفحة
     setFormData({ phone: "", price: "", details: "", image: null });
-    alert("✅ تم تسجيل الطلب!");
+    alert("✅ مبروك! الطلب اتسجل");
   };
 
   return (
@@ -79,7 +102,7 @@ const OrderForm = ({ onAddOrder }) => {
         className="w-full p-4 bg-gray-50 border-none rounded-2xl text-right h-24 outline-none resize-none"
       />
 
-      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
+      <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 hover:border-[#e6007e]/30 transition-all">
         <input
           type="file"
           accept="image/*"
@@ -95,14 +118,14 @@ const OrderForm = ({ onAddOrder }) => {
         ) : (
           <div className="text-center">
             <span className="text-2xl">📸</span>
-            <p className="text-[10px] font-bold">تصوير المنتج</p>
+            <p className="text-[10px] font-bold">ارفع صورة (أي مساحة)</p>
           </div>
         )}
       </label>
 
       <button
         type="submit"
-        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 shadow-lg shadow-pink-100"
+        className="w-full bg-[#e6007e] text-white py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-lg shadow-pink-100"
       >
         تسجيل الطلب
       </button>
